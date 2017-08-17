@@ -2,11 +2,14 @@ package com.example.android.sportsnews.Utils;
 
 import android.util.Log;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.List;
 
 /**
@@ -55,12 +58,54 @@ public final class Network {
         HttpURLConnection urlConnection = null;
         InputStream inputStream = null;
 
-        urlConnection = (HttpURLConnection) requestURL.openConnection();
-        urlConnection.setReadTimeout(10000);
-        urlConnection.setRequestMethod("GET");
-        urlConnection.connect();
+        try {
+            urlConnection = (HttpURLConnection) requestURL.openConnection();
+            urlConnection.setReadTimeout(10000);
+            urlConnection.setRequestMethod("GET");
+            urlConnection.connect();
 
-        return null;
+            int statusCode = urlConnection.getResponseCode();
+
+            // if response code is 200 then get input stream
+            if (statusCode == 200) {
+                inputStream = urlConnection.getInputStream();
+                jsonResponse = readInputStream(inputStream);
+            } else {
+                Log.e(LOG_TAG, "Error response code: " + statusCode);
+            }
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Problem retrieving JSON results", e);
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+
+            if (inputStream != null) {
+                inputStream.close();
+            }
+        }
+
+        return jsonResponse;
+    }
+
+    private static String readInputStream(InputStream inputStream) throws IOException {
+        StringBuilder output = new StringBuilder();
+
+        InputStreamReader inputStreamReader = new InputStreamReader(
+                inputStream,
+                Charset.forName("UTF-8")
+        );
+
+        BufferedReader reader = new BufferedReader(inputStreamReader);
+
+        String line = reader.readLine();
+
+        while (line != null) {
+            output.append(line);
+            line = reader.readLine();
+        }
+
+        return output.toString();
     }
 
 }
