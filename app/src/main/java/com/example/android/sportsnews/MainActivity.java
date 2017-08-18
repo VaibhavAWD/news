@@ -56,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
         mNewsList.setAdapter(mAdapter);
 
         mEmptyView = (TextView) findViewById(R.id.empty_view);
+        mEmptyView.setVisibility(View.GONE);
 
         mProgressBar = (ProgressBar) findViewById(R.id.progress_indicator);
 
