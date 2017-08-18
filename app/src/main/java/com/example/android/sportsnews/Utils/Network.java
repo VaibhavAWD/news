@@ -2,6 +2,10 @@ package com.example.android.sportsnews.Utils;
 
 import android.util.Log;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,16 +14,18 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Vaibhav on 8/17/2017.
+ * This {@link Network} class makes http request using the provided url and parses the JSON response
+ * and returns a list of type {@link List<News>}
  */
 
 public final class Network {
     private static final String LOG_TAG = Network.class.getSimpleName();
 
-    public static List<News> fetchNews(String stringURL){
+    public static List<News> fetchNews(String stringURL) {
 
         URL requestURL = createURL(stringURL);
 
@@ -31,8 +37,7 @@ public final class Network {
             e.printStackTrace();
         }
 
-
-        return null;
+        return extractNews(jsonResponse);
     }
 
     private static URL createURL(String stringURL) {
@@ -106,6 +111,45 @@ public final class Network {
         }
 
         return output.toString();
+    }
+
+    private static List<News> extractNews(String jsonResponse) {
+        List<News> newsList = new ArrayList<>();
+
+        try {
+            JSONObject main = new JSONObject(jsonResponse);
+
+            // get response JSONObject
+            JSONObject response = main.getJSONObject("response");
+
+            // get results JSONArray
+            JSONArray results = response.getJSONArray("results");
+
+            for (int i = 0; i < results.length(); i++) {
+                JSONObject object = results.getJSONObject(i);
+
+                String title = "N/A", section = "N/A", url = null;
+
+                if (object.has("webTitle")) {
+                    title = object.getString("webTitle");
+                }
+
+                if (object.has("sectionName")) {
+                    section = object.getString("sectionName");
+                }
+
+                if (object.has("webUrl")) {
+                    url = object.getString("webUrl");
+                }
+
+                newsList.add(new News(title, section, url));
+            }
+
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Unable to parse the JSON response: " + jsonResponse, e);
+        }
+
+        return newsList;
     }
 
 }
