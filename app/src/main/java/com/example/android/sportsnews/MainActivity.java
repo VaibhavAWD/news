@@ -93,6 +93,7 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
         if (newsList != null && !newsList.isEmpty()) {
             mNews = newsList;
             mAdapter = new NewsAdapter(mNews);
+            mNewsList.setAdapter(mAdapter);
         } else {
             mEmptyView.setVisibility(View.VISIBLE);
             mEmptyView.setText(R.string.no_news_found);
