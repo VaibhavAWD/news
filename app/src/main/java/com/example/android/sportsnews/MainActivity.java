@@ -11,10 +11,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.example.android.sportsnews.Utils.News;
 import com.example.android.sportsnews.Utils.NewsAdapter;
+import com.example.android.sportsnews.Utils.NewsLoader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +31,13 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
 
     private int NEWS_LOADER_ID = 1;
 
+    private static final String NEWS_REQUEST_URL =
+            "http://content.guardianapis.com/search?q=debates&api-key=test";
+
+    private List<News> mNews;
+
+    private ProgressBar mProgressBar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,11 +50,19 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
         mLayoutManager = new LinearLayoutManager(this);
         mNewsList.setLayoutManager(mLayoutManager);
 
-        mAdapter = new NewsAdapter(new ArrayList<News>());
+        mNews = new ArrayList<>();
+
+        mAdapter = new NewsAdapter(mNews);
         mNewsList.setAdapter(mAdapter);
 
         mEmptyView = (TextView) findViewById(R.id.empty_view);
 
+        mProgressBar = (ProgressBar) findViewById(R.id.progress_indicator);
+
+        initLoader();
+    }
+
+    private void initLoader() {
         LoaderManager loaderManager = getLoaderManager();
 
         // check connectivity
@@ -55,24 +72,34 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
         if (info != null && info.isConnected()) {
             loaderManager.initLoader(NEWS_LOADER_ID, null, this);
         } else {
+            mProgressBar.setVisibility(View.GONE);
             mEmptyView.setVisibility(View.VISIBLE);
             mEmptyView.setText(R.string.error_connection);
         }
-
     }
 
     @Override
     public Loader<List<News>> onCreateLoader(int i, Bundle bundle) {
-        return null;
+        return new NewsLoader(this, NEWS_REQUEST_URL);
     }
 
     @Override
     public void onLoadFinished(Loader<List<News>> loader, List<News> newsList) {
+        mProgressBar.setVisibility(View.GONE);
+        mEmptyView.setVisibility(View.GONE);
+        mNews.clear();
 
+        if (newsList != null && !newsList.isEmpty()) {
+            mNews = newsList;
+            mAdapter = new NewsAdapter(mNews);
+        } else {
+            mEmptyView.setVisibility(View.VISIBLE);
+            mEmptyView.setText(R.string.no_news_found);
+        }
     }
 
     @Override
     public void onLoaderReset(Loader<List<News>> loader) {
-
+        mNews.clear();
     }
 }
