@@ -1,12 +1,17 @@
 package com.example.android.sportsnews;
 
+import android.app.LoaderManager;
 import android.app.LoaderManager.LoaderCallbacks;
+import android.content.Context;
 import android.content.Loader;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.widget.TextView;
 
 import com.example.android.sportsnews.Utils.News;
 import com.example.android.sportsnews.Utils.NewsAdapter;
@@ -20,7 +25,9 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
     private RecyclerView.LayoutManager mLayoutManager;
     private RecyclerView.Adapter mAdapter;
 
-    private View mEmptyView;
+    private TextView mEmptyView;
+
+    private int NEWS_LOADER_ID = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,7 +44,20 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
         mAdapter = new NewsAdapter(new ArrayList<News>());
         mNewsList.setAdapter(mAdapter);
 
-        mEmptyView = findViewById(R.id.empty_view);
+        mEmptyView = (TextView) findViewById(R.id.empty_view);
+
+        LoaderManager loaderManager = getLoaderManager();
+
+        // check connectivity
+        ConnectivityManager manager =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo info = manager.getActiveNetworkInfo();
+        if (info != null && info.isConnected()) {
+            loaderManager.initLoader(NEWS_LOADER_ID, null, this);
+        } else {
+            mEmptyView.setVisibility(View.VISIBLE);
+            mEmptyView.setText(R.string.error_connection);
+        }
 
     }
 
